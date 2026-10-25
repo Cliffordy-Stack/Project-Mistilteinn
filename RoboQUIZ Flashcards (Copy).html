@@ -1,0 +1,998 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>RoboQUIZ Flashcards (Copy)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one-column study desk — deck rail, progress strip, one large card, two answer buttons */
+:root {
+  --bg: #F3F5F8; --surface: #FFFFFF; --ink: #1D2633; --muted: #5E6B7C; --line: #DCE2EA;
+  --accent: #1E3A5F; --accent-soft: #E6ECF4; --good: #2F7A55; --good-soft: #E4F2EA; --warn: #A3542F; --warn-soft: #F8EBE3; --bad: #B23A3A; --bad-soft: #F7E4E4;
+  --shadow: 0 1px 2px rgba(20,35,60,.06), 0 8px 24px rgba(20,35,60,.08);
+  --display: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121820; --surface: #1B2430; --ink: #E7ECF2; --muted: #9AA7B6; --line: #2C3846;
+  --accent: #8FB3DD; --accent-soft: #233246; --good: #7CC79F; --good-soft: #1E3529; --warn: #E4A27F; --warn-soft: #3A2A21; --bad: #EE8F8F; --bad-soft: #3A2224;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121820; --surface: #1B2430; --ink: #E7ECF2; --muted: #9AA7B6; --line: #2C3846;
+  --accent: #8FB3DD; --accent-soft: #233246; --good: #7CC79F; --good-soft: #1E3529; --warn: #E4A27F; --warn-soft: #3A2A21; --bad: #EE8F8F; --bad-soft: #3A2224;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 16px; }
+
+header { display: flex; flex-direction: column; gap: 4px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 5vw, 30px); margin: 0; color: var(--accent); text-wrap: balance; }
+
+.decks { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.chip { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: 600 14px var(--body); padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.chip .n { color: var(--muted); font-weight: 400; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.chip[aria-pressed="true"] .n { color: inherit; opacity: .8; }
+
+.stats { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--line); }
+.bar span { display: block; height: 100%; transition: width .3s ease; }
+.bar .k { background: var(--good); } .bar .l { background: var(--warn); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend b { color: var(--ink); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+.card { perspective: 1400px; cursor: pointer; outline: none; }
+.card:focus-visible .face { box-shadow: 0 0 0 3px var(--accent); }
+.inner { position: relative; min-height: 300px; transition: transform .45s cubic-bezier(.2,.7,.2,1); transform-style: preserve-3d; display: grid; }
+.card.flipped .inner { transform: rotateY(180deg); }
+.face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 20px 22px 18px;
+  display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.back { transform: rotateY(180deg); background: var(--accent-soft); }
+.meta { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta .tag { font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.text { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+  font-family: var(--display); font-size: clamp(20px, 4.6vw, 26px); line-height: 1.4; font-weight: 400; overflow-wrap: anywhere; padding: 8px 4px; }
+.back .text { font-weight: 600; color: var(--accent); }
+.hint { text-align: center; font-size: 13px; color: var(--muted); }
+.qline { font-size: 14px; color: var(--muted); text-align: center; }
+
+.answer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn { border: 1px solid var(--line); border-radius: 12px; padding: 14px 12px; font: 700 16px var(--body); cursor: pointer;
+  background: var(--surface); color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:focus-visible, .chip:focus-visible, .tool:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn.miss { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.btn.got { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.btn:disabled { opacity: .45; cursor: default; }
+kbd { font: 12px var(--body); border: 1px solid currentColor; border-radius: 4px; padding: 0 5px; opacity: .6; }
+
+.tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tool { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 7px 14px; font: 14px var(--body); cursor: pointer; }
+.tool[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.tool.danger { color: var(--warn); }
+
+.done { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px 22px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.done h2 { font-family: var(--display); color: var(--accent); margin: 0; font-size: 24px; }
+.done p { margin: 0; color: var(--muted); max-width: 46ch; }
+.done .row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.confirm { font-size: 14px; color: var(--muted); display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.tip { font-size: 13px; color: var(--muted); text-align: center; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.typebox { display: flex; gap: 10px; }
+.typebox input { flex: 1; min-width: 0; font: 18px var(--body); color: var(--ink); background: var(--surface);
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 13px 14px; }
+.typebox input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); padding-inline: 20px; }
+.result { border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; border: 1px solid transparent; }
+.result.ok { background: var(--good-soft); } .result.near { background: var(--warn-soft); } .result.bad { background: var(--bad-soft); }
+.res-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 15px; }
+.badge { font: 700 13px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; color: var(--surface); }
+.ok .badge { background: var(--good); } .near .badge { background: var(--warn); } .bad .badge { background: var(--bad); }
+.res-you { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.res-you b { color: var(--ink); }
+.res-row { display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.score { font-weight: 700; color: var(--ink); }
+.tool:disabled { opacity: .45; cursor: default; }
+.adder { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.adder h2 { font: 600 18px var(--display); margin: 0; color: var(--accent); }
+#addForm { display: flex; flex-direction: column; gap: 10px; }
+.adder label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.adder input, .adder select, .adder textarea { font: 16px var(--body); color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; min-width: 0; }
+.adder textarea { min-height: 90px; resize: vertical; margin-bottom: 8px; }
+.adder input:focus, .adder select:focus, .adder textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.adder summary { cursor: pointer; color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+.adder .note { font-size: 13px; color: var(--muted); margin: 0; }
+.adder .msg { font-size: 14px; color: var(--good); min-height: 1.3em; }
+.adder .msg.err { color: var(--bad); }
+.mylist { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.mylist li { display: flex; gap: 8px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 14px; }
+.mylist .t { min-width: 0; overflow-wrap: anywhere; }
+.mylist small { display: block; color: var(--muted); }
+#cardList { max-height: 460px; }
+#cardList li { flex-wrap: wrap; }
+#cardList .t { flex: 1 1 180px; }
+#cardList .tool { display: inline-flex; align-items: center; justify-content: center; padding: 8px; min-width: 36px; min-height: 36px; }
+#cardList .tool svg { display: block; }
+.acts { display: flex; gap: 6px; flex: 0 0 auto; margin-left: auto; }
+.mylist li.ed { flex-direction: column; align-items: stretch; }
+#cardList b { display: block; color: var(--accent); }
+@media (max-width: 480px) { .keys { display: none; } .inner { min-height: 260px; } }
+@media (prefers-reduced-motion: reduce) { .inner, .bar span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ICCT RoboTHINKS 2025 · Clash of Great Minds</div>
+    <h1>RoboQUIZ Flashcards</h1>
+  </header>
+
+  <nav class="decks" id="decks" aria-label="Choose a topic"></nav>
+
+  <section class="stats" aria-label="Progress">
+    <div class="bar" aria-hidden="true"><span class="k" id="barK"></span><span class="l" id="barL"></span></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--good)"></i><b id="nK">0</b> got it</span>
+      <span><i class="dot" style="background:var(--warn)"></i><b id="nL">0</b> still learning</span>
+      <span><i class="dot" style="background:var(--line)"></i><b id="nN">0</b> not seen</span>
+      <span>This round: <b id="nR">–</b> correct</span>
+    </div>
+  </section>
+
+  <main id="study">
+    <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard. Tap to show the answer.">
+      <div class="inner">
+        <div class="face front">
+          <div class="meta"><span class="tag" id="tagF"></span><span id="posF"></span></div>
+          <div class="text" id="frontText"></div>
+          <div class="hint" id="hint">Tap the card to show the answer</div>
+        </div>
+        <div class="face back" aria-live="polite">
+          <div class="meta"><span class="tag">Answer</span><span id="posB"></span></div>
+          <div class="text" id="backText"></div>
+          <div class="qline" id="qline"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <form class="typebox" id="typeForm" hidden autocomplete="off">
+    <label class="sr" for="typed">Your answer</label>
+    <input id="typed" name="typed" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type your answer, then press Check">
+    <button class="btn primary" id="checkBtn" type="submit">Check</button>
+  </form>
+
+  <div class="result" id="result" hidden aria-live="polite">
+    <div class="res-head"><span class="badge" id="resBadge"></span><span id="resMsg"></span></div>
+    <div class="res-you" id="resYou"></div>
+    <div class="res-row">
+      <button class="tool" id="override" type="button">I was right, count it</button>
+      <button class="btn primary" id="nextBtn" type="button">Next card <kbd class="keys">Enter</kbd></button>
+    </div>
+  </div>
+
+  <div class="answer" id="answerRow">
+    <button class="btn miss" id="miss" type="button">Still learning <kbd class="keys">←</kbd></button>
+    <button class="btn got" id="got" type="button">Got it <kbd class="keys">→</kbd></button>
+  </div>
+
+  <div class="tools">
+    <button class="tool" id="type" type="button" aria-pressed="true">Type my answer</button>
+    <button class="tool" id="shuffle" type="button" aria-pressed="true">Shuffle</button>
+    <button class="tool" id="missedOnly" type="button" aria-pressed="false">Only cards I'm still learning</button>
+    <button class="tool" id="reverse" type="button" aria-pressed="false">Show answer first</button>
+    <button class="tool" id="addToggle" type="button" aria-expanded="false" aria-controls="adder">Add flashcards</button>
+    <button class="tool danger" id="reset" type="button">Reset progress</button>
+  </div>
+  <section class="adder" id="adder" hidden aria-label="Add flashcards">
+    <h2>Add flashcards</h2>
+    <form id="addForm" autocomplete="off">
+      <label>Topic<select id="addDeck"></select></label>
+      <label>Clue (what the quiz master reads)<input id="addQ" type="text" maxlength="300"></label>
+      <label>Answer<input id="addA" type="text" maxlength="200"></label>
+      <button class="btn primary" type="submit">Add card</button>
+    </form>
+    <p class="note">Tip: for alternative answers, write <b>Base or Radix</b> or put a short form in brackets, like <b>Integrated Circuit (IC)</b>. Cards are saved on this device only.</p>
+    <details>
+      <summary>Paste many cards at once</summary>
+      <label>One card per line, written as: clue | answer (they go to the topic chosen above)<textarea id="addBulk" placeholder="Who invented the telephone? | Alexander Graham Bell"></textarea></label>
+      <button class="btn" type="button" id="addBulkBtn">Add all</button>
+    </details>
+    <details id="browseDet">
+      <summary>Browse all cards</summary>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label>Search<input id="bSearch" type="search" placeholder="Search clues and answers"></label>
+        <label>Show<select id="bStatus"><option value="">All cards</option><option value="l">Still learning</option><option value="k">Got it</option><option value="n">Not seen yet</option></select></label>
+        <label style="flex-direction:row;align-items:center;gap:8px"><input id="bAns" type="checkbox" checked style="width:auto"> Show answers</label>
+        <div class="msg" id="bCount" role="status" style="color:var(--muted)"></div>
+        <ul class="mylist" id="cardList"></ul>
+        <p class="note">Choose a topic chip at the top to browse just that topic, or "All topics" to see every card.</p>
+      </div>
+    </details>
+    <div class="msg" id="addMsg" role="status"></div>
+    <details>
+      <summary id="mySum">My added cards (0)</summary>
+      <ul class="mylist" id="myList"></ul>
+    </details>
+  </section>
+  <div class="confirm" id="confirmRow" hidden>
+    <span>Clear your progress for <b id="confirmDeck"></b>?</span>
+    <button class="tool danger" id="confirmYes" type="button">Yes, clear it</button>
+    <button class="tool" id="confirmNo" type="button">Cancel</button>
+  </div>
+  <p class="tip">Type your answer like in the contest, or turn off typing to just flip the cards. Your progress is saved on this device.</p>
+</div>
+
+<script>
+// [front (what the quiz master reads), back (your answer)]
+window.DECKS = [
+{ id: 'hist', name: 'Computer History', cards: [
+['The first calculating tool.', 'Abacus'],
+['Mechanical calculator invented by Blaise Pascal in 1642.', 'Pascaline'],
+['Charles Babbage\'s 1822 machine capable of polynomial calculations.', 'Difference Engine'],
+['Charles Babbage\'s 1837 design, considered the first mechanical computer.', 'Analytical Engine'],
+['Who is considered the Father of Computers?', 'Charles Babbage'],
+['Regarded as the first computer programmer; wrote algorithms for the Analytical Engine.', 'Ada Lovelace (Augusta Ada King)'],
+['First programmable electromechanical computer (1941), by Konrad Zuse.', 'Zuse Z3'],
+['Created by Howard Aiken and IBM in 1944; used for military calculations.', 'Harvard Mark I'],
+['First general-purpose electronic digital computer (1946).', 'ENIAC'],
+['Full name of ENIAC.', 'Electronic Numerical Integrator and Computer'],
+['Designers of ENIAC and UNIVAC I.', 'J. Presper Eckert and John Mauchly'],
+['Invented in 1947 by Bardeen, Brattain and Shockley; replaced vacuum tubes.', 'Transistor'],
+['Developed in 1958 by Jack Kilby and Robert Noyce; miniaturized circuits.', 'Integrated Circuit (IC)'],
+['The first microprocessor (1971).', 'Intel 4004'],
+['Prediction that transistors on a chip double about every two years.', 'Moore\'s Law (Gordon Moore)'],
+['Network launched in 1969 that laid the foundation for the Internet.', 'ARPANET'],
+['First commercially available computer (1951).', 'UNIVAC I'],
+['Computer generation that used vacuum tubes and magnetic drums.', '1st Generation (1940s–1950s)'],
+['Computer generation where transistors replaced vacuum tubes.', '2nd Generation (1956–1963)'],
+['Computer generation that used integrated circuits, keyboards and monitors.', '3rd Generation (1964–1971)'],
+['Computer generation that uses microprocessors and VLSI.', '4th Generation (1971–present)'],
+['Computer generation based on AI, parallel processing and quantum computing.', '5th Generation'],
+['First high-level programming language (1957), by John Backus.', 'FORTRAN (Formula Translation)'],
+['Business programming language (1959) by Grace Hopper\'s team.', 'COBOL (Common Business-Oriented Language)'],
+['Operating system created in 1969 by Ken Thompson and Dennis Ritchie at Bell Labs.', 'UNIX'],
+['VLSI stands for…', 'Very Large Scale Integration'],
+['In which era are personal computers?', 'Electronic Era'],
+['Two popular personal computers of the 1970s–80s.', 'Apple II (1977) and IBM PC (1981)'],
+['5th-gen development: decentralized, distributed ledger that is tamper-resistant.', 'Blockchain'],
+['5th-gen development: processes data close to its source to reduce latency.', 'Edge Computing'],
+['5th-gen development: network of devices with sensors and software that exchange data.', 'Internet of Things (IoT)'],
+['5th-gen development: data too large for traditional databases.', 'Big Data'],
+['5th-gen development: protects systems and networks from digital attacks, theft or damage.', 'Cybersecurity'],
+['5th-gen development: servers, storage and databases delivered over the internet.', 'Cloud Computing'],
+['5th-gen development: faster speeds, lower latency, supports autonomous vehicles and smart cities.', '5G Technology'],
+['Subset of AI where algorithms learn from data without explicit programming for every task.', 'Machine Learning'],
+['Basic unit of quantum information.', 'Qubit (quantum bit)'],
+['First compiler and the term "bug" are credited to her.', 'Grace Hopper'],
+]},
+{ id: 'ict', name: 'ICT Timeline', cards: [
+['Earliest known writing system (~3000 BCE), by the Sumerians.', 'Cuneiform'],
+['Inventor of paper in China (105 CE).', 'Cai Lun'],
+['Oldest printed book (868 CE).', 'Diamond Sutra'],
+['Printing press of the 1440s that spread mass literacy in Europe.', 'Gutenberg\'s printing press'],
+['First telegraph message sent in 1844.', '"What hath God wrought?"'],
+['Who invented the telephone in 1876?', 'Alexander Graham Bell'],
+['Invented the phonograph in 1877.', 'Thomas Edison'],
+['First to send a radio signal across the Atlantic.', 'Guglielmo Marconi (1901)'],
+['Device developed in 1897; foundation of TVs and monitors.', 'Cathode Ray Tube (CRT)'],
+['First radio broadcasting station (1920).', 'KDKA, Pittsburgh'],
+['WWII code-breaking computer (1943).', 'Colossus'],
+['Who invented email in 1971?', 'Ray Tomlinson'],
+['Invented Ethernet in 1973.', 'Robert Metcalfe'],
+['Made the first mobile phone call (1973).', 'Martin Cooper (Motorola)'],
+['Year Microsoft was founded.', '1975'],
+['Year Apple was founded.', '1976'],
+['First popular word processor, released in 1979.', 'WordStar'],
+['Year the Domain Name System (DNS) was introduced.', '1983'],
+['Year the Apple Macintosh with GUI launched.', '1984'],
+['Year the World Wide Web went live.', '1991'],
+['First popular web browser (1993).', 'Mosaic'],
+['First free webmail (1996).', 'Hotmail'],
+['Year Google was founded.', '1998'],
+['Year the Wi-Fi 802.11b standard was introduced.', '1999'],
+['Year the iPhone was released.', '2007'],
+['AI voice assistant introduced in 2011.', 'Siri'],
+['Conversational AI released in 2022 by OpenAI.', 'ChatGPT'],
+['Character code for telegraphy invented by Émile Baudot in 1874.', 'Baudot Code'],
+['Date the Philippines first connected to the Internet.', 'March 29, 1994'],
+]},
+{ id: 'fund', name: 'Computer Fundamentals', cards: [
+['IBM Summit and Fugaku are what type of computer?', 'Supercomputer'],
+['The most powerful type of computer.', 'Supercomputer'],
+['Large systems for bulk data processing in banks and insurance; IBM zSeries.', 'Mainframe'],
+['Between mainframes and micros; DEC PDP-11, IBM AS/400.', 'Minicomputer (Midrange)'],
+['Most common computer, designed for individual use.', 'Microcomputer (Personal Computer)'],
+['Special-purpose computer built into appliances or cars.', 'Embedded System'],
+['Computer that provides services to other computers over a network.', 'Server'],
+['Computer that processes continuous data.', 'Analog Computer'],
+['Computer that processes discrete data in binary form.', 'Digital Computer'],
+['ECG machines are what type of computer?', 'Hybrid Computer'],
+['Computer that can perform a wide range of tasks in homes, offices and schools.', 'General-purpose Computer'],
+['Scientific, business and industrial computers are classified based on…', 'Purpose'],
+['Industrial computer system used for control and monitoring.', 'SCADA'],
+['Memory that comes built into the computer.', 'Internal Memory'],
+['Memory that stores data in capacitors and needs frequent refreshing.', 'DRAM (Dynamic RAM)'],
+['Memory that stores data in flip-flops and needs no refreshing.', 'SRAM (Static RAM)'],
+['RAM that syncs with the system clock.', 'SDRAM'],
+['RAM that transfers data on both clock edges.', 'DDR SDRAM (Double Data Rate)'],
+['ROM that can be written only once.', 'PROM'],
+['ROM erased by UV light.', 'EPROM'],
+['ROM erased by an electrical signal.', 'EEPROM'],
+['EEPROM that is erased and reprogrammed in blocks.', 'Flash Memory'],
+['Storage device that uses magnetic storage.', 'Hard Disk Drive (HDD)'],
+['Storage device that uses flash memory; faster than HDD.', 'Solid State Drive (SSD)'],
+['Hardware that displays visual output from the PC.', 'Monitor'],
+['Device that converts physical documents into digital format.', 'Scanner'],
+['Contains the motherboard, CPU and memory.', 'System Unit'],
+['The brain of the computer.', 'CPU (Central Processing Unit)'],
+['The four operations of the CPU, in order.', 'Fetch, Decode, Execute, Store'],
+['CPU part that performs arithmetic and logical operations.', 'ALU (Arithmetic Logic Unit)'],
+['CPU part that directs the operation of the processor.', 'Control Unit (CU)'],
+['Small storage locations in the CPU for quick data access.', 'Registers'],
+['Stores frequently accessed data for quick retrieval.', 'Cache Memory'],
+]},
+{ id: 'num', name: 'Number Systems & Codes', cards: [
+['The number of unique digits, including zero, in a number system.', 'Base or Radix'],
+['Separates the integral and fractional parts of a number.', 'Radix Point'],
+['Number system with two states, 0 and 1.', 'Binary (Base 2)'],
+['Number system whose digits each represent two binary digits.', 'Quaternary (Base 4)'],
+['Number system whose digits each represent three binary digits.', 'Octal (Base 8)'],
+['Number system using 0–9 plus A and B.', 'Duodecimal (Base 12)'],
+['Number system using 0–9 plus A–F.', 'Hexadecimal (Base 16)'],
+['Number system using 0–9 and A–Z.', 'Hexatridecimal (Base 36)'],
+['Hexadecimal digit for 12.', 'C'],
+['Hexadecimal digit for 15.', 'F'],
+['Binary 1101 in decimal.', '13'],
+['Decimal 10 in binary.', '1010'],
+['Another term for the r\'s complement.', 'Radix Complement'],
+['Another term for the (r − 1)\'s complement.', 'Diminished Radix Complement'],
+['ASCII stands for…', 'American Standard Code for Information Interchange'],
+['ASCII belongs to what category?', 'Alphanumeric Codes'],
+['Code that uses 8 bits for 256 characters, including foreign symbols.', 'Extended ASCII'],
+['Successor of ASCII; supports nearly all written languages.', 'Unicode'],
+['Code where each decimal digit is written as binary.', 'BCD (Binary-Coded Decimal)'],
+['8-bit code developed by IBM for old mainframes.', 'EBCDIC'],
+['EBCDIC stands for…', 'Extended Binary-Coded Decimal Interchange Code'],
+]},
+{ id: 'soft', name: 'Software & Malware', cards: [
+['Programs designed to perform specific tasks for the user.', 'Application Software'],
+['Web browsers belong to what category?', 'Software (Application Software)'],
+['Software used to create, manage and query databases.', 'DBMS (Database Management System)'],
+['System software that manages hardware and software resources.', 'Operating System'],
+['OS function that controls printers, hard drives and monitors.', 'Device Management'],
+['OS with no direct interaction; jobs run in groups.', 'Batch Operating System'],
+['OS that runs multiple tasks at the same time.', 'Multitasking Operating System'],
+['OS that manages network resources; e.g., Novell NetWare.', 'Network Operating System (NOS)'],
+['OS for applications needing timely responses; e.g., VxWorks.', 'Real-Time Operating System (RTOS)'],
+['Virus that infects .exe and .com files; e.g., CIH.', 'File Infector Virus'],
+['Virus that infects documents with macros; e.g., Concept.', 'Macro Virus'],
+['Virus that infects the Master Boot Record; e.g., Stone.', 'Boot Sector Virus'],
+['Virus that changes its code each time it spreads.', 'Polymorphic Virus'],
+['Virus that rewrites its code entirely; e.g., ZMist.', 'Metamorphic Virus'],
+['Virus that embeds itself in system memory; e.g., Randex.', 'Resident Virus'],
+['Malicious software that spreads without a host file.', 'Worm'],
+['Poses as a legitimate program, then attacks.', 'Trojan Horse'],
+['Encrypts your files and demands payment.', 'Ransomware'],
+['Gathers user info without consent.', 'Spyware'],
+['Displays advertisements to earn revenue.', 'Adware'],
+['Repeatedly reminds the user to register or buy.', 'Nagware'],
+['Free trial, hoping you buy the full version.', 'Shareware'],
+['Usable for a limited time or with limited features before payment.', 'Trialware'],
+['Free to use, with paid premium features.', 'Freemium'],
+['Completely free to use.', 'Freeware'],
+['Pre-installed software that takes up space but is not useful to all.', 'Bloatware'],
+['Ransomware attack in 2017 that hit about 200,000 computers.', 'WannaCry'],
+['Fastest-spreading email worm (2004).', 'Mydoom'],
+['Email virus from 2000 with ~$10 billion in damage.', 'ILOVEYOU'],
+['First known cyber weapon (2010), targeted Iran.', 'Stuxnet'],
+['Largest data breach: 3 billion accounts in 2013.', 'Yahoo!'],
+['The three elements of cybersecurity (CIA triad).', 'Confidentiality, Integrity, Availability'],
+['The action of verifying the identity of a user or process.', 'Authentication'],
+['A fake website imitating Facebook to steal logins.', 'Phishing'],
+['VIRUS stands for…', 'Vital Information Resources Under Siege'],
+]},
+{ id: 'abbr', name: 'Abbreviations', cards: [
+['API', 'Application Programming Interface'], ['URL', 'Uniform Resource Locator'], ['DNS', 'Domain Name System'],
+['HTTPS', 'Hypertext Transfer Protocol Secure'], ['VPN', 'Virtual Private Network'], ['SQL', 'Structured Query Language'],
+['USB', 'Universal Serial Bus'], ['GUI', 'Graphical User Interface'], ['BIOS', 'Basic Input/Output System'],
+['SEO', 'Search Engine Optimization'], ['HTML', 'Hypertext Markup Language'], ['CSS3', 'Cascading Style Sheets 3'],
+['JSON', 'JavaScript Object Notation'], ['XML', 'eXtensible Markup Language'], ['CSV', 'Comma-Separated Values'],
+['LAN', 'Local Area Network'], ['WAN', 'Wide Area Network'], ['SSID', 'Service Set Identifier'],
+['Wi-Fi', 'Wireless Fidelity'], ['P2P', 'Peer-to-Peer'], ['SaaS', 'Software as a Service'],
+['PaaS', 'Platform as a Service'], ['IaaS', 'Infrastructure as a Service'], ['TLC', 'Triple-Level Cell'],
+['FLOPS', 'Floating Point Operations Per Second'], ['CLI', 'Command-Line Interface'], ['LDAP', 'Lightweight Directory Access Protocol'],
+['MIMO', 'Multiple Input Multiple Output'], ['NFC', 'Near Field Communication'], ['OCR', 'Optical Character Recognition'],
+['RDBMS', 'Relational Database Management System'], ['IDE', 'Integrated Development Environment'], ['PSTN', 'Public Switched Telephone Network'],
+['VoIP', 'Voice over Internet Protocol'], ['ADSL', 'Asymmetric Digital Subscriber Line'], ['SDK', 'Software Development Kit'],
+['TFTP', 'Trivial File Transfer Protocol'], ['SMTP', 'Simple Mail Transfer Protocol'], ['POP3', 'Post Office Protocol 3'],
+['IMAP', 'Internet Message Access Protocol'], ['SFTP', 'Secure File Transfer Protocol'], ['SSH', 'Secure Shell'],
+['SSL', 'Secure Sockets Layer'], ['TLS', 'Transport Layer Security'], ['VHDL', 'VHSIC Hardware Description Language'],
+['FPGA', 'Field Programmable Gate Array'], ['GPU', 'Graphics Processing Unit'], ['TCP', 'Transmission Control Protocol'],
+['UDP', 'User Datagram Protocol'], ['ATM (networking)', 'Asynchronous Transfer Mode'], ['VNC', 'Virtual Network Computing'],
+['DPI', 'Dots Per Inch'], ['CRT', 'Cathode Ray Tube'], ['LCD', 'Liquid Crystal Display'], ['OLED', 'Organic Light Emitting Diode'],
+['RWD', 'Responsive Web Design'], ['NAT', 'Network Address Translation'], ['RARP', 'Reverse Address Resolution Protocol'],
+['MAC', 'Media Access Control'], ['MD5', 'Message Digest Algorithm 5'], ['SHA', 'Secure Hash Algorithm'],
+['DDoS', 'Distributed Denial of Service'], ['QoS', 'Quality of Service'], ['SATA', 'Serial Advanced Technology Attachment'],
+['PCI', 'Peripheral Component Interconnect'], ['CAPTCHA', 'Completely Automated Public Turing test to tell Computers and Humans Apart'],
+['LASER', 'Light Amplification by Stimulated Emission of Radiation'], ['RADAR', 'Radio Detection and Ranging'],
+['SONAR', 'Sound Navigation and Ranging'], ['PIR', 'Passive Infrared'], ['DDR', 'Double Data Rate'],
+['SCARA', 'Selective Compliance Assembly Robot Arm'], ['IPR', 'Intellectual Property Rights'], ['VPS', 'Virtual Private Server'],
+]},
+{ id: 'robo', name: 'Robotics', cards: [
+['The word "robot" came from this Czech word meaning "forced labor".', 'Robota'],
+['Czech writer who coined the word "robot".', 'Karel Čapek'],
+['Play where the word "robot" first appeared.', 'R.U.R. (Rossum\'s Universal Robots)'],
+['First industrial robot (1961).', 'Unimate'],
+['Inventors of Unimate.', 'George Devol and Joseph Engelberger'],
+['Father of Robotics.', 'Joseph Engelberger'],
+['First mobile robot controlled by AI, from SRI.', 'Shakey the Robot'],
+['Leonardo da Vinci\'s robot design from around 1495.', 'Mechanical knight'],
+['Giant automaton in Greek mythology.', 'Talos'],
+['Sub-field of robotics with qualities of both a robot and a living creature.', 'Cybernetics'],
+['Organism whose body parts are partly replaced by robotics.', 'Cyborg (Cybernetic Organism)'],
+['Robot designed to work alongside humans in a shared workspace.', 'Collaborative Robot (Cobot)'],
+['Robot that resembles the human body.', 'Humanoid Robot'],
+['Robot that navigates unstructured environments without human intervention.', 'Autonomous Mobile Robot (AMR)'],
+['Robot controlled remotely by humans, used in hazardous places.', 'Teleoperated Robot'],
+['Robot that assists humans outside industry: cleaning, security, healthcare.', 'Service Robot'],
+['Robots operating in large groups through collective behavior.', 'Swarm Robot'],
+['Robot made of flexible materials that mimic living organisms.', 'Soft Robot'],
+['Wearable device that enhances strength or mobility.', 'Exoskeleton'],
+['Robot designed for companionship, education or customer service.', 'Social Robot'],
+['"A robot may not injure a human being or, through inaction, allow a human being to come to harm."', 'First Law of Robotics'],
+['"A robot must obey orders given by human beings, except where they conflict with the First Law."', 'Second Law of Robotics'],
+['"A robot must protect its own existence…"', 'Third Law of Robotics'],
+['Law that protects humanity as a whole, added in 1985.', 'Zeroth Law of Robotics'],
+['Author of the Laws of Robotics.', 'Isaac Asimov'],
+['Lab robot of the 1960s for moving objects and basic manipulation.', 'Victor 6000'],
+['Stanford\'s 1969 robotic arm for computer-controlled motion.', 'The Stanford Arm'],
+['Unimation\'s widely used industrial robot of the 1980s.', 'Puma 560'],
+['Honda\'s humanoid robot (1996).', 'Honda Asimo'],
+['NASA\'s humanoid robot for space (1997).', 'Robonaut'],
+['Industrial robot with vision systems for precision assembly.', 'KUKA KR 5'],
+['Sony\'s robotic pet dog (1999).', 'Aibo'],
+['iRobot\'s robot vacuum (2002).', 'Roomba'],
+['Boston Dynamics\' military quadruped (2005).', 'BigDog'],
+['SoftBank\'s humanoid for social tasks (2014).', 'Pepper'],
+['Humanoid that simulates child development (2004), by IIT.', 'iCub'],
+['Small humanoid for education and research (2006).', 'Nao'],
+['Tesla\'s humanoid for manual labor (2022).', 'Optimus'],
+['Boston Dynamics\' four-legged robot of the 2020s.', 'Spot'],
+['Agility Robotics\' bipedal robot.', 'Cassie'],
+['Hanson Robotics\' robot, first to receive citizenship.', 'Sophia'],
+['Robot part that provides movement like a human arm.', 'Manipulator (Robotic Arm)'],
+['Two components of a manipulator.', 'Joints and Links'],
+['Robot part responsible for gripping and using tools.', 'End Effector'],
+['The robot\'s brain.', 'Controller'],
+['Three types of drive systems.', 'Electric, Hydraulic, Pneumatic'],
+['Drive system that uses compressed air.', 'Pneumatic'],
+['Drive system that uses fluid pressure.', 'Hydraulic'],
+['Number of independent movements a robot can make.', 'Degrees of Freedom (DoF)'],
+['Surge, Sway and Heave are what type of movement?', 'Linear (Translational)'],
+['Roll, Pitch and Yaw are what type of movement?', 'Rotational'],
+['Forward and backward movement along the X-axis.', 'Surge'],
+['Up and down movement along the Z-axis.', 'Heave'],
+['Rotation around the Y-axis, like nodding.', 'Pitch'],
+['Rotation around the Z-axis, like shaking your head.', 'Yaw'],
+['DoF common in industrial robots.', '6 DoF'],
+['Configuration with three linear axes (x, y, z).', 'Cartesian'],
+['Configuration that rotates around a vertical axis and moves linearly along two others.', 'Cylindrical'],
+['Configuration that rotates around two axes and moves linearly along one.', 'Spherical'],
+['Configuration with two parallel rotary joints and one linear joint.', 'SCARA'],
+['Configuration with multiple rotary joints like a human arm.', 'Articulated'],
+['Configuration with parallel arms on a common base; high-speed picking.', 'Delta'],
+['Irrational fear of robots and AI.', 'Robophobia'],
+['Tiny robot about 50–100 nanometers wide, used in medicine.', 'Nanorobot'],
+]},
+{ id: 'hci', name: 'HCI', cards: [
+['Study of how humans interact with computers and how systems are designed for usability.', 'Human–Computer Interaction (HCI)'],
+['Interface with icons, windows and buttons.', 'GUI (Graphical User Interface)'],
+['Where the GUI was developed in 1973.', 'Xerox PARC'],
+['Text-based interface.', 'CLI (Command-Line Interface)'],
+['Interface that uses spoken commands.', 'VUI (Voice User Interface)'],
+['Interface that uses vibration or touch feedback.', 'Haptic Interface'],
+['Interface combining two or more input methods.', 'Multimodal Interface'],
+['Interface that adjusts to the user\'s skill and preferences.', 'Adaptive Interface'],
+['Direct connection between the brain and a computer.', 'Brain–Computer Interface (BCI)'],
+['Interface that interprets and responds intelligently to user behavior.', 'Intelligent Interface'],
+['Computing integrated seamlessly into everyday life.', 'Ubiquitous Computing (UbiComp)'],
+['Coined "Ubiquitous Computing" in 1988.', 'Mark Weiser'],
+['Systems that respond based on time, location or activity.', 'Context-Aware Systems'],
+['Environments that adapt to users intelligently, like smart homes.', 'Ambient Intelligence'],
+['Overlays virtual data onto the real world.', 'Augmented Reality (AR)'],
+['HCI system with only one mode of input or output.', 'Unimodal HCI System'],
+['HCI system using several modes at once.', 'Multimodal HCI System'],
+['Fully immersive simulated 3D environment.', 'Virtual Reality (VR)'],
+['Coined "Virtual Reality" in 1987.', 'Jaron Lanier'],
+['First VR headset (1968).', 'Sword of Damocles'],
+['Created the first VR headset.', 'Ivan Sutherland'],
+['How easy and pleasant a system is to use.', 'Usability'],
+['The user\'s emotional and cognitive response.', 'User Experience (UX)'],
+['Confirmation that the system received the input.', 'Feedback'],
+['Visual clue showing an object\'s function.', 'Affordance'],
+['Design principles for usability, proposed by Jakob Nielsen.', 'Heuristics'],
+['Evaluating a model before final design.', 'Prototype Testing'],
+['Human thought processes when using systems.', 'Cognitive Ergonomics'],
+['Invented the computer mouse (1964).', 'Douglas Engelbart'],
+]},
+{ id: 'ai', name: 'Artificial Intelligence', cards: [
+['Branch of computer science creating systems that perform tasks requiring human intelligence.', 'Artificial Intelligence (AI)'],
+['Proposed a test of machine intelligence in 1950.', 'Alan Turing (Turing Test)'],
+['Coined "Artificial Intelligence" at the Dartmouth Conference (1956).', 'John McCarthy'],
+['Created an early checkers program and coined "Machine Learning" (1959).', 'Arthur Samuel'],
+['Co-founder of the MIT AI Lab.', 'Marvin Minsky'],
+['Created ELIZA, the first chatbot (1966).', 'Joseph Weizenbaum'],
+['The first chatbot.', 'ELIZA'],
+['Popularized neural networks and backpropagation (1986).', 'Geoffrey Hinton'],
+['IBM computer that beat Garry Kasparov in 1997.', 'Deep Blue'],
+['First computer to beat a grandmaster (1988).', 'Deep Thought'],
+['Defeated Go champion Lee Sedol in 2016.', 'AlphaGo'],
+['First AI program (1955), by Newell and Simon.', 'Logic Theorist'],
+['Periods of reduced AI funding.', 'AI Winter'],
+['UK AI company acquired by Google in 2014.', 'DeepMind'],
+['AI feature: ability to improve from experience.', 'Learning'],
+['AI feature: recognizing and interpreting sensory data.', 'Perception'],
+['AI feature: acting without human intervention.', 'Autonomy'],
+['AI that understands human language.', 'Natural Language Processing (NLP)'],
+['AI that interprets images and videos.', 'Computer Vision'],
+['Converts spoken language into text.', 'Speech Recognition'],
+['AI program that replicates a human expert\'s decision-making.', 'Expert System'],
+['Three components of an expert system.', 'Knowledge Base, Inference Engine, User Interface'],
+['Expert system part that applies logical rules to reach conclusions.', 'Inference Engine'],
+['Framework for developing expert systems.', 'Expert System Shell'],
+['1970s expert system that diagnosed blood infections.', 'MYCIN'],
+['1965 expert system that analyzed chemical compounds.', 'DENDRAL'],
+['Multi-layered neural network that processes complex data.', 'Deep Learning'],
+['AI modeled after the human brain.', 'Neural Network'],
+['Reasoning with approximate values instead of true/false.', 'Fuzzy Logic'],
+['Introduced Fuzzy Logic in 1965.', 'Lotfi Zadeh'],
+['Learning through trial and reward.', 'Reinforcement Learning'],
+['Unintended discrimination in algorithmic decisions.', 'AI Bias'],
+['AI that can justify its reasoning.', 'Explainable AI (XAI)'],
+['Study of the responsible and fair use of AI.', 'AI Ethics'],
+['Suggests items based on preferences, like Netflix.', 'Recommendation System'],
+['Microsoft\'s generative AI assistant.', 'Microsoft Copilot'],
+['AGI stands for…', 'Artificial General Intelligence'],
+['CNN stands for (in AI)…', 'Convolutional Neural Network'],
+]},
+{ id: 'alife', name: 'Artificial Life', cards: [
+['Field that simulates biological processes to understand the principles of life.', 'Artificial Life (A-Life)'],
+['Coined "Artificial Life" in 1986 at Los Alamos.', 'Christopher Langton'],
+['Developed the self-replicating automata concept.', 'John von Neumann'],
+['Digital ecosystem simulation by Thomas Ray (1990).', 'Tierra'],
+['Flocking behavior model by Craig Reynolds (1986).', 'Boids'],
+['Complex patterns formed from simple rules.', 'Emergence'],
+['Order forming spontaneously without control.', 'Self-Organization'],
+['Gradual development through selection and variation.', 'Evolution'],
+['A-Life approach using software simulations.', 'Soft A-Life'],
+['A-Life approach using robots or hardware.', 'Hard A-Life'],
+['A-Life approach using biochemical components.', 'Wet A-Life'],
+['Grid-based simulations that evolve over time.', 'Cellular Automata'],
+['Individual agents interacting to produce group behavior.', 'Agent-Based Modeling'],
+['Optimization inspired by natural selection.', 'Genetic Algorithms'],
+['Collective problem-solving inspired by ant colonies and bee hives.', 'Swarm Intelligence'],
+['Changing actions to fit dynamic environments.', 'Adaptive Behavior'],
+['Physical design and structure of robots or organisms.', 'Morphology'],
+['Development of form and structure in artificial organisms.', 'Morphogenesis'],
+['Robots that evolve their design or behavior using algorithms.', 'Evolutionary Robotics'],
+['Multiple robots evolving together to improve teamwork.', 'Co-Evolutionary Robotics'],
+['Robots that mimic natural movement, like snake robots.', 'Bio-Inspired Robotics'],
+['Robots that change their own shape or function.', 'Self-Reconfigurable Robots'],
+['Virtual system simulating predator-prey dynamics.', 'Artificial Ecosystem'],
+['Computational simulation of chemical interactions.', 'Artificial Chemistry'],
+['Two key A-Life research centers.', 'Santa Fe Institute and Los Alamos National Lab'],
+['CAS stands for…', 'Complex Adaptive Systems'],
+]},
+{ id: 'firsts', name: 'Fathers & Firsts', cards: [
+['Coined "Internet of Things" in 1999.', 'Kevin Ashton'],
+['First IoT device (1982).', 'Modified Coca-Cola vending machine at Carnegie Mellon'],
+['Created the first website and the World Wide Web.', 'Tim Berners-Lee'],
+['Creator of the open-source Linux OS.', 'Linus Torvalds'],
+['First smartphone (1994).', 'IBM Simon'],
+['Google processor that achieved quantum supremacy in 2019.', 'Sycamore'],
+['Google\'s algorithm that revolutionized search engines.', 'PageRank'],
+['LMS formerly used by ICCT, shut down Sept 22, 2022.', 'Edmodo'],
+['First AI-controlled mobile robot.', 'Shakey (SRI)'],
+['First programmable computer.', 'Zuse Z3'],
+['Fathers of the Internet (TCP/IP).', 'Vint Cerf and Bob Kahn'],
+['Coined the word "robotics".', 'Isaac Asimov'],
+['Father of Cybernetics.', 'Norbert Wiener'],
+['Created the ILOVEYOU virus.', 'Onel de Guzman (Filipino)'],
+]},
+];
+
+(function () {
+  const DECKS = window.DECKS;
+  const CK = 'rq-custom';
+  let custom = [];
+  try { custom = JSON.parse(localStorage.getItem(CK) || '[]') || []; } catch (e) { custom = []; }
+  let edits = {}, dels = [];
+  try { edits = JSON.parse(localStorage.getItem('rq-edits') || '{}') || {}; dels = JSON.parse(localStorage.getItem('rq-del') || '[]') || []; } catch (e) { edits = {}; dels = []; }
+  const MINE = { id: 'mine', name: 'My Cards', cards: [] };
+  DECKS.push(MINE);
+  custom.forEach(x => { const d = DECKS.find(k => k.id === x.deck) || MINE; const c = [x.q, x.a]; c.cid = x.id; d.cards.push(c); });
+  const ALL = { id: 'all', name: 'All topics', cards: [] };
+  DECKS.forEach(d => d.cards.forEach((c, i) => { c.id = c.cid || (d.id + ':' + i); c.deck = d.name; ALL.cards.push(c); }));
+  DECKS.forEach(d => { d.cards.forEach(c => { const ed = edits[c.id]; if (ed) { c[0] = ed.q; c[1] = ed.a; } }); d.cards = d.cards.filter(c => !dels.includes(c.id)); });
+  ALL.cards = ALL.cards.filter(c => !dels.includes(c.id));
+  const deckList = [ALL, ...DECKS];
+
+  const store = {
+    get(k, f) { try { const v = localStorage.getItem('rq-' + k); return v ? JSON.parse(v) : f; } catch (e) { return f; } },
+    set(k, v) { try { localStorage.setItem('rq-' + k, JSON.stringify(v)); } catch (e) {} },
+  };
+  let status = store.get('status', {}); // id -> 'k' | 'l'
+  let deckId = store.get('deck', 'all');
+  if (!deckList.find(d => d.id === deckId && d.cards.length)) deckId = 'all';
+  let opts = Object.assign({ type: true, shuffle: true, missedOnly: false, reverse: false }, store.get('opts', {}));
+  let queue = [], pos = 0, flipped = false, pending = null, round = { right: 0, total: 0 };
+
+  const $ = id => document.getElementById(id);
+  const deck = () => deckList.find(d => d.id === deckId);
+
+  /* ---------- answer checking ---------- */
+  const ORD = { first: '1st', second: '2nd', third: '3rd', fourth: '4th', fifth: '5th', zeroth: '0th' };
+  const STOP = new Set(['and', 'the', 'of', 'a', 'an', 'to']);
+  const GENERIC = new Set(['virus', 'robot', 'robots', 'computer', 'computers', 'system', 'systems', 'operating', 'interface', 'memory', 'law', 'of', 'robotics', 'the', 'code', 'codes', 'software', 'a', 'life']);
+  function norm(s) {
+    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/&/g, ' and ').replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+      .split(' ').map(w => ORD[w] || w).join(' ').replace(/^(the|a|an) /, '');
+  }
+  const toks = s => s.split(' ').filter(w => w && !STOP.has(w));
+  const sameSet = (a, b) => { const x = toks(a), y = toks(b); return x.length > 0 && x.length === y.length && [...x].sort().join(' ') === [...y].sort().join(' '); };
+  const core = s => s.split(' ').filter(w => w && !GENERIC.has(w)).join(' ');
+  function alts(ans) {
+    const out = new Set([ans]);
+    const main = ans.replace(/\s*\([^)]*\)/g, '').trim();
+    if (main) out.add(main);
+    (ans.match(/\(([^)]*)\)/g) || []).forEach(p => { const v = p.slice(1, -1); if (!/^[\d\s–-]+s?$/.test(v) && !/^\d/.test(v)) out.add(v); });
+    [...out].forEach(a => a.split(/\s+\/\s+|\s+or\s+/i).forEach(x => out.add(x)));
+    return [...out].map(norm).filter(Boolean);
+  }
+  function lev(a, b) {
+    const m = a.length, n = b.length; if (!m || !n) return m || n;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[n];
+  }
+  function grade(input, ans) {
+    const i = norm(input);
+    if (!i) return { v: 'bad', msg: 'No answer typed. Here is the correct one.' };
+    const list = alts(ans);
+    for (const n of list) {
+      if (i === n || sameSet(i, n)) return { v: 'ok', msg: 'Correct!' };
+      const ci = core(i), cn = core(n);
+      if (ci && ci === cn) return { v: 'ok', msg: 'Correct!' };
+    }
+    for (const n of list) {
+      if (n.length >= 4 && !/\d/.test(n) && !/\d/.test(i)) {
+        const d = lev(i.replace(/ /g, ''), n.replace(/ /g, ''));
+        const r = 1 - d / Math.max(i.length, n.length);
+        if (d <= 2 || r >= 0.82) return { v: 'near', msg: 'Almost! Check your spelling. Spelling counts in the contest.' };
+      }
+      const words = n.split(' ');
+      if (words.length >= 2 && words[words.length - 1].length > 3 && i === words[words.length - 1])
+        return { v: 'near', msg: 'Almost! Write the full name in the contest.' };
+    }
+    return { v: 'bad', msg: 'Not quite. Here is the correct answer.' };
+  }
+
+  /* ---------- decks and progress ---------- */
+  function renderDecks() {
+    $('decks').innerHTML = '';
+    deckList.filter(d => d.cards.length).forEach(d => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', d.id === deckId);
+      b.innerHTML = `${d.name}<span class="n">${d.cards.length}</span>`;
+      b.onclick = () => { deckId = d.id; store.set('deck', deckId); renderDecks(); build(); };
+      $('decks').appendChild(b);
+    });
+  }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  function build() {
+    let cards = deck().cards.slice();
+    if (opts.missedOnly) cards = cards.filter(c => status[c.id] === 'l');
+    const fresh = cards.filter(c => status[c.id] !== 'k'), known = opts.missedOnly ? [] : cards.filter(c => status[c.id] === 'k');
+    queue = opts.shuffle ? shuffle(fresh).concat(shuffle(known)) : fresh.concat(known);
+    pos = 0; round = { right: 0, total: 0 }; render();
+  }
+
+  function stats() {
+    const cs = deck().cards; let k = 0, l = 0;
+    cs.forEach(c => { if (status[c.id] === 'k') k++; else if (status[c.id] === 'l') l++; });
+    $('nK').textContent = k; $('nL').textContent = l; $('nN').textContent = cs.length - k - l;
+    $('barK').style.width = (k / cs.length * 100) + '%'; $('barL').style.width = (l / cs.length * 100) + '%';
+    $('nR').textContent = round.total ? `${round.right} / ${round.total}` : '–';
+    if ($('browseDet').open) renderBrowse();
+    return { k, l };
+  }
+
+  function setFlip(v) {
+    flipped = v; const c = $('card'); if (!c) return;
+    c.classList.toggle('flipped', v);
+    c.setAttribute('aria-label', v ? 'Showing the answer.' : (opts.type ? 'Question card.' : 'Flashcard. Tap to show the answer.'));
+  }
+
+  const isReversed = () => opts.reverse && !opts.type;
+
+  function render() {
+    const s = stats();
+    ['type', 'shuffle', 'missedOnly', 'reverse'].forEach(k => $(k).setAttribute('aria-pressed', opts[k]));
+    $('reverse').disabled = opts.type;
+    $('reverse').title = opts.type ? 'Turn off typing to use this' : '';
+    pending = null; $('result').hidden = true;
+    if (pos >= queue.length) {
+      $('answerRow').hidden = true; $('typeForm').hidden = true;
+      const empty = opts.missedOnly && queue.length === 0;
+      const score = round.total ? ` You answered <b>${round.right} of ${round.total}</b> correctly this round.` : '';
+      $('study').innerHTML = `<div class="done">
+        <h2>${empty ? 'Nothing to review here' : 'Deck finished'}</h2>
+        <p>${empty ? 'You have no cards marked "still learning" in this topic.' : `You know <b>${s.k}</b> of ${deck().cards.length} cards in ${deck().name}.${score} ${s.l ? `<b>${s.l}</b> still need practice.` : 'Great work.'}`}</p>
+        <div class="row">
+          ${s.l ? `<button class="btn miss" type="button" id="goMissed">Review ${s.l} still learning</button>` : ''}
+          <button class="btn" type="button" id="again">Go through the deck again</button>
+        </div></div>`;
+      const gm = $('goMissed'); if (gm) gm.onclick = () => { opts.missedOnly = true; store.set('opts', opts); restore(); build(); };
+      $('again').onclick = () => { opts.missedOnly = false; store.set('opts', opts); restore(); build(); };
+      return;
+    }
+    restore();
+    $('answerRow').hidden = opts.type; $('typeForm').hidden = !opts.type;
+    const c = queue[pos];
+    const q = isReversed() ? c[1] : c[0], a = isReversed() ? c[0] : c[1];
+    setFlip(false);
+    $('frontText').textContent = q; $('backText').textContent = a; $('qline').textContent = q;
+    $('tagF').textContent = c.deck;
+    $('hint').textContent = opts.type ? 'Type your answer below' : 'Tap the card to show the answer';
+    const p = `${pos + 1} / ${queue.length}`; $('posF').textContent = p; $('posB').textContent = p;
+    if (opts.type) { $('typed').value = ''; $('typed').disabled = false; $('checkBtn').disabled = false; try { $('typed').focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  let cardHTML = null;
+  function restore() { if (!$('card')) { $('study').innerHTML = cardHTML; bindCard(); } }
+
+  function mark(v) {
+    const c = queue[pos]; if (!c) return;
+    status[c.id] = v; store.set('status', status);
+    if (v === 'l') { const at = Math.min(queue.length, pos + 5); queue.splice(at, 0, c); }
+    pos++; render();
+  }
+
+  function showResult(r, typed) {
+    const box = $('result');
+    box.className = 'result ' + r.v; box.hidden = false;
+    $('resBadge').textContent = r.v === 'ok' ? 'Correct' : r.v === 'near' ? 'Almost' : 'Wrong';
+    $('resMsg').textContent = r.msg;
+    $('resYou').innerHTML = typed.trim() ? `You typed: <b></b>` : '';
+    if (typed.trim()) $('resYou').querySelector('b').textContent = typed;
+    $('override').hidden = r.v === 'ok';
+  }
+
+  function check() {
+    if (pending) { next(); return; }
+    const c = queue[pos]; if (!c) return;
+    const typed = $('typed').value;
+    const r = grade(typed, c[1]);
+    pending = r.v === 'ok' ? 'k' : 'l';
+    round.total++; if (r.v === 'ok') round.right++;
+    stats();
+    setFlip(true);
+    $('typed').disabled = true; $('checkBtn').disabled = true;
+    showResult(r, typed);
+    try { $('nextBtn').focus({ preventScroll: true }); } catch (e) {}
+  }
+  function next() { const v = pending; pending = null; if (v) mark(v); }
+
+  function bindCard() {
+    const card = $('card');
+    card.onclick = () => { if (opts.type && !pending) { $('typed').focus(); return; } setFlip(!flipped); };
+    card.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); card.onclick(); } };
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('#adder, #browser')) return;
+    const inField = e.target && e.target.tagName === 'INPUT';
+    if (opts.type) { if (e.key === 'Enter' && pending && !inField) { e.preventDefault(); next(); } return; }
+    if (inField || (e.target.closest && e.target.closest('button'))) return;
+    if (e.key === 'ArrowRight') mark('k'); else if (e.key === 'ArrowLeft') mark('l');
+    else if (e.key === ' ' && $('card')) { e.preventDefault(); setFlip(!flipped); }
+  });
+  $('typeForm').addEventListener('submit', e => { e.preventDefault(); check(); });
+  $('nextBtn').onclick = next;
+  $('override').onclick = () => {
+    if (pending !== 'l') return;
+    pending = 'k'; round.right++; stats();
+    $('result').className = 'result ok'; $('resBadge').textContent = 'Counted'; $('resMsg').textContent = 'Marked as correct.'; $('override').hidden = true;
+  };
+  $('got').onclick = () => mark('k');
+  $('miss').onclick = () => mark('l');
+  ['type', 'shuffle', 'missedOnly', 'reverse'].forEach(k => $(k).onclick = () => {
+    opts[k] = !opts[k]; store.set('opts', opts); restore();
+    if (k === 'reverse' || k === 'type') render(); else build();
+  });
+  $('reset').onclick = () => { $('confirmDeck').textContent = deck().name; $('confirmRow').hidden = false; };
+  $('confirmNo').onclick = () => { $('confirmRow').hidden = true; };
+  $('confirmYes').onclick = () => {
+    deck().cards.forEach(c => delete status[c.id]); store.set('status', status);
+    $('confirmRow').hidden = true; opts.missedOnly = false; store.set('opts', opts); restore(); build();
+  };
+
+  /* ---------- add / remove your own cards ---------- */
+  const saveCustom = () => { try { localStorage.setItem(CK, JSON.stringify(custom)); } catch (e) {} };
+  const say = (t, bad) => { const m = $('addMsg'); m.textContent = t; m.className = 'msg' + (bad ? ' err' : ''); };
+  function fillSelect() {
+    const s = $('addDeck');
+    DECKS.forEach(d => { const o = document.createElement('option'); o.value = d.id; o.textContent = d.name; s.appendChild(o); });
+  }
+  function addOne(q, a, did) {
+    const d = DECKS.find(k => k.id === did) || MINE;
+    const id = 'c:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    custom.push({ id, deck: d.id, q, a });
+    const c = [q, a]; c.id = id; c.cid = id; c.deck = d.name;
+    d.cards.push(c); ALL.cards.push(c);
+    if (!opts.missedOnly && (deckId === 'all' || deckId === d.id)) queue.push(c);
+  }
+  function afterAdd() {
+    saveCustom(); renderDecks(); renderMine();
+    if (pos >= queue.length) render(); else stats();
+  }
+  function renderMine() {
+    const ul = $('myList'); ul.innerHTML = '';
+    $('mySum').textContent = 'My added cards (' + custom.length + ')';
+    custom.forEach(x => {
+      const li = document.createElement('li'), t = document.createElement('span'), sm = document.createElement('small'), b = document.createElement('button');
+      t.className = 't'; t.textContent = x.q;
+      sm.textContent = x.a + ' · ' + (DECKS.find(k => k.id === x.deck) || MINE).name; t.appendChild(sm);
+      b.type = 'button'; b.className = 'tool danger'; b.textContent = 'Remove'; b.setAttribute('aria-label', 'Remove card: ' + x.q);
+      b.onclick = () => removeOne(x.id);
+      li.append(t, b); ul.appendChild(li);
+    });
+  }
+  function removeOne(id) {
+    custom = custom.filter(x => x.id !== id);
+    DECKS.forEach(d => { d.cards = d.cards.filter(c => c.cid !== id); });
+    ALL.cards = ALL.cards.filter(c => c.cid !== id);
+    delete status[id]; store.set('status', status);
+    let sw = false;
+    if (!deck().cards.length) { deckId = 'all'; store.set('deck', deckId); sw = true; }
+    saveCustom(); renderDecks(); renderMine();
+    if (sw) build(); else dropFromQueue(x => x.cid === id);
+  }
+  $('addToggle').onclick = () => {
+    const open = $('adder').hidden; $('adder').hidden = !open;
+    $('addToggle').setAttribute('aria-expanded', open);
+    if (open) { $('addDeck').value = deckId === 'all' ? 'mine' : deckId; say(''); $('addQ').focus(); $('adder').scrollIntoView({ block: 'nearest' }); }
+  };
+  $('addForm').onsubmit = e => {
+    e.preventDefault();
+    const q = $('addQ').value.trim(), a = $('addA').value.trim();
+    if (!q || !a) { say('Please fill in both the clue and the answer.', true); return; }
+    addOne(q, a, $('addDeck').value);
+    $('addQ').value = ''; $('addA').value = '';
+    afterAdd(); say('Card added.'); $('addQ').focus();
+  };
+  $('addBulkBtn').onclick = () => {
+    let n = 0, bad = 0;
+    $('addBulk').value.split(/\r?\n/).forEach(line => {
+      if (!line.trim()) return;
+      const i = line.lastIndexOf('|'), q = line.slice(0, i).trim(), a = line.slice(i + 1).trim();
+      if (i < 0 || !q || !a) bad++; else { addOne(q, a, $('addDeck').value); n++; }
+    });
+    if (n) { $('addBulk').value = ''; afterAdd(); }
+    say(n ? 'Added ' + n + (n === 1 ? ' card' : ' cards') + (bad ? ', skipped ' + bad + (bad === 1 ? ' line' : ' lines') + ' without a "clue | answer" pair' : '') + '.' : 'No cards added. Write one "clue | answer" per line.', !n);
+  };
+  /* ---------- browse all cards ---------- */
+  function renderBrowse() {
+    const q = norm($('bSearch').value), st = $('bStatus').value, showA = $('bAns').checked;
+    const all = deck().cards, ul = $('cardList'), frag = document.createDocumentFragment();
+    let n = 0;
+    all.forEach(c => {
+      const s = status[c.id] || 'n';
+      if (st && s !== st) return;
+      if (q && !(norm(c[0]) + ' ' + norm(c[1])).includes(q)) return;
+      n++;
+      const li = document.createElement('li'), t = document.createElement('span'), sm = document.createElement('small');
+      t.className = 't'; t.textContent = c[0];
+      if (showA) { const b = document.createElement('b'); b.textContent = c[1]; t.appendChild(b); }
+      sm.textContent = c.deck + ' · ' + (s === 'k' ? 'Got it' : s === 'l' ? 'Still learning' : 'Not seen yet');
+      t.appendChild(sm); li.appendChild(t);
+      if (editingId === c.id) { li.textContent = ''; li.className = 'ed'; li.appendChild(editForm(c)); } else li.appendChild(actions(c));
+      frag.appendChild(li);
+    });
+    ul.innerHTML = ''; ul.appendChild(frag);
+    $('bCount').textContent = 'Showing ' + n + ' of ' + all.length + ' cards in ' + deck().name + '.';
+  }
+  const svg = p => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+  const ICON = {
+    'Edit': svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+    'Delete': svg('<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>'),
+    'Confirm delete': svg('<path d="M20 6 9 17l-5-5"/>'),
+    'Save': svg('<path d="M20 6 9 17l-5-5"/>'),
+    'Cancel': svg('<path d="M18 6 6 18M6 6l12 12"/>')
+  };
+  let editingId = null, confirmId = null;
+  function dropFromQueue(pred) {
+    const cur = queue[pos] && pred(queue[pos]);
+    const before = queue.slice(0, pos).filter(pred).length;
+    queue = queue.filter(x => !pred(x)); pos -= before;
+    if (cur || pos >= queue.length) render(); else stats();
+  }
+  function deleteCard(c) {
+    if (c.cid) { removeOne(c.cid); return; }
+    dels.push(c.id);
+    try { localStorage.setItem('rq-del', JSON.stringify(dels)); } catch (e) {}
+    DECKS.forEach(d => { d.cards = d.cards.filter(x => x !== c); });
+    ALL.cards = ALL.cards.filter(x => x !== c);
+    delete status[c.id]; store.set('status', status);
+    let sw = false;
+    if (!deck().cards.length) { deckId = 'all'; store.set('deck', deckId); sw = true; }
+    renderDecks();
+    if (sw) build(); else dropFromQueue(x => x === c);
+  }
+  function saveEdit(c, q, a) {
+    c[0] = q; c[1] = a;
+    if (c.cid) { const x = custom.find(k => k.id === c.cid); if (x) { x.q = q; x.a = a; } saveCustom(); renderMine(); }
+    else { edits[c.id] = { q, a }; try { localStorage.setItem('rq-edits', JSON.stringify(edits)); } catch (e) {} }
+    if (queue[pos] === c && $('frontText')) {
+      const r = isReversed();
+      $('frontText').textContent = r ? a : q; $('backText').textContent = r ? q : a; $('qline').textContent = r ? a : q;
+    }
+    stats();
+  }
+  function actions(c) {
+    const w = document.createElement('span'); w.className = 'acts';
+    const mk = (label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tool ' + cls; b.innerHTML = ICON[label]; b.title = label; b.setAttribute('aria-label', label + ' card: ' + c[0]); b.onclick = fn; return b; };
+    if (confirmId === c.id) {
+      w.append(mk('Confirm delete', 'danger', () => { confirmId = null; deleteCard(c); }), mk('Cancel', '', () => { confirmId = null; renderBrowse(); }));
+    } else {
+      w.append(
+        mk('Edit', '', () => { editingId = c.id; confirmId = null; renderBrowse(); const i = $('cardList').querySelector('input'); if (i) i.focus(); }),
+        mk('Delete', 'danger', () => { confirmId = c.id; editingId = null; renderBrowse(); })
+      );
+    }
+    return w;
+  }
+  function editForm(c) {
+    const f = document.createElement('div'); f.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+    const qi = document.createElement('input'), ai = document.createElement('input'), err = document.createElement('small'), w = document.createElement('span');
+    const save = document.createElement('button'), cancel = document.createElement('button');
+    qi.type = 'text'; ai.type = 'text'; qi.value = c[0]; ai.value = c[1]; qi.maxLength = 300; ai.maxLength = 200;
+    qi.setAttribute('aria-label', 'Clue'); ai.setAttribute('aria-label', 'Answer');
+    err.style.color = 'var(--bad)'; w.className = 'acts';
+    save.type = 'button'; cancel.type = 'button'; save.className = 'tool'; cancel.className = 'tool';
+    save.innerHTML = ICON.Save; cancel.innerHTML = ICON.Cancel;
+    save.title = 'Save'; cancel.title = 'Cancel';
+    save.setAttribute('aria-label', 'Save changes'); cancel.setAttribute('aria-label', 'Cancel editing');
+    const go = () => {
+      const q = qi.value.trim(), a = ai.value.trim();
+      if (!q || !a) { err.textContent = 'Clue and answer can’t be empty.'; return; }
+      editingId = null; saveEdit(c, q, a);
+    };
+    const stop = () => { editingId = null; renderBrowse(); };
+    save.onclick = go; cancel.onclick = stop;
+    [qi, ai].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } else if (e.key === 'Escape') stop(); }));
+    w.append(save, cancel); f.append(qi, ai, err, w);
+    return f;
+  }
+  $('browseDet').addEventListener('toggle', () => { if ($('browseDet').open) renderBrowse(); });
+  ['bSearch', 'bStatus', 'bAns'].forEach(id => $(id).addEventListener('input', renderBrowse));
+  fillSelect(); renderMine();
+
+  window.__grade = grade;
+  cardHTML = $('study').innerHTML;
+  bindCard(); renderDecks(); build();
+})();
+</script>
+
+</body></html>
